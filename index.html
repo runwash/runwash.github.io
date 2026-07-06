@@ -92,6 +92,15 @@
     font-family: var(--font-display);
     font-size: 12px; letter-spacing: 0.5px;
   }
+  #version-tag {
+    position: fixed;
+    bottom: 8px; right: 10px;
+    font-family: var(--font-display);
+    font-size: 11px; letter-spacing: 0.5px;
+    color: var(--ink); opacity: 0.28;
+    pointer-events: none; user-select: none;
+    z-index: 5;
+  }
   #back-btn {
     background: white;
     border: 2.5px solid var(--ink);
@@ -481,6 +490,7 @@
     <span id="step-counter">1 / 15</span>
   </div>
   <div id="app"><div id="screen"></div></div>
+  <div id="version-tag">v3</div>
 
 <script>
 const WEBHOOK_URL = "https://hook.eu1.make.com/89u5dxwrl98gpnubkp548ivdt8d6x61a";
