@@ -525,16 +525,16 @@ const TIME_SLOTS = (() => {
   return out;
 })();
 
-// Steps : suppression de la Q1 (bloqué), on garde 14 étapes + thanks
+// Steps : 16 étapes + thanks (runwash_key après incident_type, amount après description)
 const STEPS = [
-  "welcome","center","machine","incident_type",
-  "date","time_slot","description","brand","color","plate",
+  "welcome","center","machine","incident_type","runwash_key",
+  "date","time_slot","description","amount","brand","color","plate",
   "firstname","lastname","phone","consent","thanks"
 ];
 
 const data = {
-  center:"", machine:"", incidentType:"",
-  date:"", timeSlot:"", description:"",
+  center:"", machine:"", incidentType:"", runwashKey:"",
+  date:"", timeSlot:"", description:"", amountLost:"",
   brand:"", color:"", plate:"",
   firstname:"", lastname:"", phone:"",
   consent: null
@@ -656,13 +656,33 @@ function renderIncidentType(){
   });
 }
 
+function renderRunwashKey(){
+  screen().innerHTML = `
+    <div class="question-block">
+      <span class="qnum">4</span>
+      <h2 class="qlabel">Avez-vous la <b>clé RunWash</b> ?</h2>
+      <p class="hint">La clé prépayée / de fidélité RunWash. Cela nous aide à retrouver votre paiement.</p>
+    </div>
+    <div id="opts">
+      <button class="choice ${data.runwashKey==="Oui"?"selected":""}" data-v="Oui">
+        <span class="key-badge">A</span>Oui
+      </button>
+      <button class="choice ${data.runwashKey==="Non"?"selected":""}" data-v="Non">
+        <span class="key-badge">B</span>Non
+      </button>
+    </div>`;
+  document.querySelectorAll("#opts .choice").forEach(b=>{
+    b.onclick = ()=>{ update("runwashKey",b.dataset.v); next(); };
+  });
+}
+
 function renderDate(){
   const today = new Date().toISOString().split("T")[0];
   const yesterday = new Date(Date.now() - 24*60*60*1000).toISOString().split("T")[0];
 
   screen().innerHTML = `
     <div class="question-block">
-      <span class="qnum">4</span>
+      <span class="qnum">5</span>
       <h2 class="qlabel"><b>Quand</b> est-ce arrivé ?<span class="req">*</span></h2>
       <p class="hint">Uniquement les incidents survenus aujourd'hui ou hier.</p>
     </div>
@@ -698,7 +718,7 @@ function renderDate(){
 function renderTimeSlot(){
   screen().innerHTML = `
     <div class="question-block">
-      <span class="qnum">5</span>
+      <span class="qnum">6</span>
       <h2 class="qlabel">À <b>quelle heure environ</b> ?<span class="req">*</span></h2>
       <p class="hint">Choisissez un créneau de 30 min, cela nous aide à retrouver la scène sur la vidéo.</p>
     </div>
@@ -717,11 +737,11 @@ function renderTimeSlot(){
 function renderDescription(){
   screen().innerHTML = `
     <div class="question-block">
-      <span class="qnum">6</span>
+      <span class="qnum">7</span>
       <h2 class="qlabel">Racontez-nous <b>ce qui s'est passé</b><span class="req">*</span></h2>
       <p class="hint">En quelques mots, tout ce qui peut nous aider.</p>
     </div>
-    <textarea id="inp" rows="4" maxlength="1000" placeholder="Ex : J'ai mis 2€, la machine a bippé mais rien ne s'est lancé…">${esc(data.description)}</textarea>
+    <textarea id="inp" rows="4" maxlength="1000" placeholder="Ex : J'ai inséré 5 €, la machine a bippé mais rien ne s'est lancé…">${esc(data.description)}</textarea>
     <div class="btn-row">
       <button class="btn-primary" id="cta" ${data.description.length>=5?"":"disabled"}>OK ✓</button>
       <span class="btn-hint"><kbd>Shift</kbd> + <kbd>Entrée</kbd> pour saut de ligne</span>
@@ -755,8 +775,9 @@ function renderTextField(num, labelHtml, key, placeholder, required, validate){
   inp.onkeydown = e=>{ if(e.key==="Enter"&&validate(data[key])) next(); };
 }
 
-function renderBrand(){ renderTextField(7,"Quelle est <b>la marque</b> de votre véhicule ?","brand","Renault, Peugeot, Dacia…",true,v=>v.length>=1); }
-function renderColor(){ renderTextField(8,"Quelle est <b>sa couleur</b> ?","color","Rouge, blanche, grise…",true,v=>v.length>=1); }
+function renderAmount(){ renderTextField(8,"Combien avez-vous <b>perdu</b> ?","amountLost","Ex : 5 €",true,v=>v.trim().length>=1); }
+function renderBrand(){ renderTextField(9,"Quelle est <b>la marque</b> de votre véhicule ?","brand","Renault, Peugeot, Dacia…",true,v=>v.length>=1); }
+function renderColor(){ renderTextField(10,"Quelle est <b>sa couleur</b> ?","color","Rouge, blanche, grise…",true,v=>v.length>=1); }
 
 function renderPlate(){
   // Deux formats : AA-123-BB (nouveau) ou 123-ABC-12 (ancien DOM-TOM)
@@ -780,7 +801,7 @@ function renderPlate(){
 
   screen().innerHTML = `
     <div class="question-block">
-      <span class="qnum">9</span>
+      <span class="qnum">11</span>
       <h2 class="qlabel">Votre <b>plaque d'immatriculation</b><span class="req">*</span></h2>
       <p class="hint">Formats acceptés : <b>AB-123-CD</b> ou <b>123-ABC-12</b> — tirets automatiques.</p>
     </div>
@@ -813,15 +834,15 @@ function renderPlate(){
   inp.onkeydown = e=>{ if(e.key==="Enter"&&isValidPlate(data.plate)) next(); };
 }
 
-function renderFirstname(){ renderTextField(10,"Votre <b>prénom</b>","firstname","Répondez ici…",true,v=>v.length>=1); }
-function renderLastname(){  renderTextField(11,"Votre <b>nom</b>","lastname","Répondez ici…",true,v=>v.length>=1); }
+function renderFirstname(){ renderTextField(12,"Votre <b>prénom</b>","firstname","Répondez ici…",true,v=>v.length>=1); }
+function renderLastname(){  renderTextField(13,"Votre <b>nom</b>","lastname","Répondez ici…",true,v=>v.length>=1); }
 
 function renderPhone(){
   const isValidPhone = v => v.replace(/\D/g,"").length === 10;
 
   screen().innerHTML = `
     <div class="question-block">
-      <span class="qnum">12</span>
+      <span class="qnum">14</span>
       <h2 class="qlabel">Votre <b>numéro de téléphone</b><span class="req">*</span></h2>
       <p class="hint">10 chiffres obligatoires — nous vous appelons dès que la vidéo est vérifiée.</p>
     </div>
@@ -857,7 +878,7 @@ function renderPhone(){
 function renderConsent(){
   screen().innerHTML = `
     <div class="question-block">
-      <span class="qnum">13</span>
+      <span class="qnum">15</span>
       <h2 class="qlabel" style="font-size:clamp(16px,3.5vw,20px);line-height:1.45;">
         J'accepte d'être contacté et que mes informations soient traitées par RunWash dans le cadre de ce SAV et de la relation commerciale qui pourrait en découler.<span class="req">*</span>
       </h2>
@@ -967,8 +988,10 @@ async function submit(){
 // ============================================================
 const RENDERERS = {
   welcome:renderWelcome, center:renderCenter, machine:renderMachine,
-  incident_type:renderIncidentType, date:renderDate, time_slot:renderTimeSlot,
+  incident_type:renderIncidentType, runwash_key:renderRunwashKey,
+  date:renderDate, time_slot:renderTimeSlot,
   description:renderDescription, brand:renderBrand, color:renderColor,
+  amount:renderAmount,
   plate:renderPlate, firstname:renderFirstname, lastname:renderLastname,
   phone:renderPhone, consent:renderConsent, thanks:renderThanks
 };
