@@ -490,7 +490,7 @@
     <span id="step-counter">1 / 15</span>
   </div>
   <div id="app"><div id="screen"></div></div>
-  <div id="version-tag">v3</div>
+  <div id="version-tag">v4</div>
 
 <script>
 const WEBHOOK_URL = "https://hook.eu1.make.com/89u5dxwrl98gpnubkp548ivdt8d6x61a";
@@ -517,6 +517,17 @@ const MACHINES = [
   "Lavage Rouleau 1 (Portique)", "Lavage Rouleau 2 (Portique)",
   "Distributeur de lingettes"
 ];
+
+// Machines présentes seulement dans certains centres, insérées après la HP4.
+// Sainte-Marie : local 6 pistes (HP5 et HP6), absentes des autres centres.
+const MACHINES_EXTRA = {
+  "Sainte-Marie": ["Lavage Karcher 5 (Haute pression)", "Lavage Karcher 6 (Haute pression)"]
+};
+function machinesFor(center){
+  const extra = MACHINES_EXTRA[center] || [];
+  const i = MACHINES.indexOf("Lavage Karcher 4 (Haute pression)") + 1;
+  return [...MACHINES.slice(0, i), ...extra, ...MACHINES.slice(i)];
+}
 
 const INCIDENTS = [
   { key: "A", label: "Jeton avalé sans démarrage" },
@@ -632,6 +643,9 @@ function renderCenter(){
 }
 
 function renderMachine(){
+  const list = machinesFor(data.center);
+  // Retour arrière avec changement de centre : on oublie une machine qui n'existe pas dans le nouveau centre
+  if(data.machine && !list.includes(data.machine)) update("machine","");
   screen().innerHTML = `
     <div class="question-block">
       <span class="qnum">2</span>
@@ -639,7 +653,7 @@ function renderMachine(){
     </div>
     <select id="inp">
       <option value="">— Choisir —</option>
-      ${MACHINES.map(m=>`<option value="${esc(m)}" ${data.machine===m?"selected":""}>${esc(m)}</option>`).join("")}
+      ${list.map(m=>`<option value="${esc(m)}" ${data.machine===m?"selected":""}>${esc(m)}</option>`).join("")}
     </select>
     <div class="btn-row">
       <button class="btn-primary" id="cta" ${data.machine?"":"disabled"}>OK ✓</button>
@@ -959,7 +973,7 @@ async function submit(){
   const payload = {
     ...data,
     submitted_at: new Date().toISOString(),
-    source: "runwash-sav-v2",
+    source: "runwash-sav-v4",
     webhook_secret: WEBHOOK_SECRET,
     time_to_complete: time_secs,
     bot_suspected: bot_suspected
